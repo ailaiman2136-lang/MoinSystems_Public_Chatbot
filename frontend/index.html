@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoinSystems AI Assistant</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0; font-family: Arial, sans-serif;
+    background: #f3f5f9; color: #172033;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 20px;
+}
+.chat {
+    width: 100%; max-width: 760px; height: 85vh;
+    background: white; border-radius: 18px;
+    box-shadow: 0 10px 40px #17203315;
+    display: flex; flex-direction: column; overflow: hidden;
+}
+header {
+    background: #172554; color: white;
+    padding: 22px 25px;
+}
+header h2 { margin: 0 0 6px; }
+header p { margin: 0; color: #cbd5e1; font-size: 14px; }
+#messages {
+    flex: 1; overflow-y: auto; padding: 25px;
+    display: flex; flex-direction: column; gap: 15px;
+}
+.message {
+    max-width: 82%; padding: 13px 16px;
+    border-radius: 14px; line-height: 1.5;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.bot { background: #eef2ff; align-self: flex-start; }
+.user { background: #1d4ed8; color: white; align-self: flex-end; }
+#status { padding: 0 25px 8px; color: #64748b; font-size: 13px; }
+form {
+    display: flex; gap: 10px; padding: 18px;
+    border-top: 1px solid #e5e7eb;
+}
+input {
+    flex: 1; min-width: 0; padding: 14px;
+    border: 1px solid #cbd5e1; border-radius: 10px;
+    font-size: 15px; outline: none;
+}
+input:focus { border-color: #2563eb; }
+button {
+    padding: 0 22px; border: 0; border-radius: 10px;
+    background: #1d4ed8; color: white;
+    font-weight: bold; cursor: pointer;
+}
+button:disabled { opacity: .6; cursor: not-allowed; }
+
+.lead-card {
+    margin: 10px 0;
+    padding: 18px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 480px;
+}
+
+.lead-card h3 { margin-top: 0; color: #172554; }
+
+.lead-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lead-form input,
+.lead-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+}
+
+.lead-form textarea {
+    min-height: 85px;
+    resize: vertical;
+}
+
+.lead-form button {
+    padding: 13px;
+    min-height: 44px;
+}
+
+.lead-result {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+@media(max-width: 500px) {
+    body { padding: 0; }
+    .chat { height: 100vh; border-radius: 0; }
+    .message { max-width: 90%; }
+}
+</style>
+</head>
+<body>
+<div class="chat">
+    <header>
+        <h2>MoinSystems AI</h2>
+        <p>AI Assistant · Ask us about our services and solutions</p>
+    </header>
+
+    <div id="messages">
+        <div class="message bot">
+            Hello! Welcome to MoinSystems AI. How can I help you today?
+        </div>
+    </div>
+
+    <div id="status"></div>
+
+    <form id="chatForm">
+        <input id="userInput" placeholder="Type your message..." required maxlength="4000">
+        <button id="sendButton" type="submit">Send</button>
+    </form>
+</div>
+
+<script>
+const form = document.getElementById("chatForm");
+const input = document.getElementById("userInput");
+const messages = document.getElementById("messages");
+const statusText = document.getElementById("status");
+const sendButton = document.getElementById("sendButton");
+
+let sessionId = null;
+
+function addMessage(text, type) {
+    const message = document.createElement("div");
+    message.className = `message ${type}`;
+    message.textContent = text;
+    messages.appendChild(message);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function showLeadForm() {
+    const existingForm = document.getElementById("leadCard");
+    if (existingForm) return;
+
+    const card = document.createElement("div");
+    card.className = "lead-card";
+    card.id = "leadCard";
+
+    card.innerHTML = `
+        <h3>Let's discuss your project</h3>
+        <p>Please share your details so our team can contact you.</p>
+
+        <form class="lead-form" id="leadForm">
+            <input name="full_name" placeholder="Full Name" required maxlength="150">
+            <input name="email" type="email" placeholder="Email Address" required maxlength="255">
+            <input name="phone" placeholder="Phone Number" required maxlength="30">
+            <input name="company" placeholder="Company (Optional)" maxlength="150">
+            <textarea name="project_details" placeholder="Tell us about your project"></textarea>
+            <button type="submit" id="leadSubmit">Submit Details</button>
+        </form>
+
+        <div class="lead-result" id="leadResult"></div>
+    `;
+
+    messages.appendChild(card);
+    messages.scrollTop = messages.scrollHeight;
+
+    const leadForm = card.querySelector("#leadForm");
+
+    leadForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const submitButton = card.querySelector("#leadSubmit");
+        const result = card.querySelector("#leadResult");
+
+        submitButton.disabled = true;
+        result.textContent = "Submitting your details...";
+
+        const formData = new FormData(leadForm);
+
+        const leadData = {
+            full_name: formData.get("full_name").trim(),
+            email: formData.get("email").trim(),
+            phone: formData.get("phone").trim(),
+            company: formData.get("company").trim() || null,
+            project_details: formData.get("project_details").trim() || null
+        };
+
+        try {
+            const response = await fetch("/api/v1/leads", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(leadData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Submission failed.");
+            }
+
+            result.textContent =
+                "Thank you! Your details have been submitted successfully. Our team can follow up with you.";
+
+            leadForm.remove();
+
+        } catch (error) {
+            result.textContent = error.message;
+            submitButton.disabled = false;
+        }
+
+        messages.scrollTop = messages.scrollHeight;
+    });
+}
+
+form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage(message, "user");
+    input.value = "";
+    sendButton.disabled = true;
+    statusText.textContent = "MoinSystems AI is thinking...";
+
+    try {
+        const response = await fetch("/api/v1/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: message,
+                session_id: sessionId
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        sessionId = data.session_id;
+
+        let answer = data.answer;
+
+        if (data.sources && data.sources.length) {
+            answer += "\n\nSources: " + data.sources.join(", ");
+        }
+
+        addMessage(answer, "bot");
+
+        if (data.lead_capture_required) {
+        showLeadForm();
+        }
+
+    } catch (error) {
+        addMessage(
+            "Sorry, I couldn't connect to the assistant. Please try again.",
+            "bot"
+        );
+        console.error(error);
+    } finally {
+        statusText.textContent = "";
+        sendButton.disabled = false;
+        input.focus();
+    }
+});
+</script>
+</body>
+</html>

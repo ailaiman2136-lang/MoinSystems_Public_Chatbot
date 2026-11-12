@@ -1,4 +1,8 @@
+
 import math
+import re
+from difflib import get_close_matches
+
 from sqlalchemy import select
 
 from app.db.database import SessionLocal
@@ -31,6 +35,28 @@ INTENT_RULES = {
 }
 
 
+def normalize_text(text):
+    text = text.lower().strip()
+    text = re.sub(r"[^\w\s]", " ", text)
+    return re.sub(r"\s+", " ", text)
+
+
+def correct_spelling(query, vocabulary):
+    words = normalize_text(query).split()
+    corrected = []
+
+    for word in words:
+        if len(word) >= 4 and word not in vocabulary:
+            matches = get_close_matches(
+                word, vocabulary, n=1, cutoff=0.88
+            )
+            corrected.append(matches[0] if matches else word)
+        else:
+            corrected.append(word)
+
+    return " ".join(corrected)
+
+
 def cosine_similarity(a, b):
     dot = sum(x * y for x, y in zip(a, b))
     norm_a = math.sqrt(sum(x * x for x in a))
@@ -43,12 +69,15 @@ def cosine_similarity(a, b):
 
 
 def get_intent_boost(query, intents):
-    query = query.lower()
+    query = normalize_text(query)
     intents = intents or []
     boost = 0.0
 
     for rule in INTENT_RULES.values():
-        if any(word in query for word in rule["keywords"]):
+        if any(
+            normalize_text(keyword) in query
+            for keyword in rule["keywords"]
+        ):
             for intent, value in rule["boosts"].items():
                 if intent in intents:
                     boost = max(boost, value)
@@ -60,13 +89,20 @@ def retrieve_documents(query, top_k=TOP_K):
     session = SessionLocal()
 
     try:
-        query_vector = generate_query_embedding(query.strip())
-
         documents = session.scalars(
             select(KnowledgeDocument).where(
                 KnowledgeDocument.embedding.is_not(None)
             )
         ).all()
+
+        vocabulary = set()
+
+        for doc in documents:
+            text = f"{doc.title} {doc.content}"
+            vocabulary.update(normalize_text(text).split())
+
+        corrected_query = correct_spelling(query, vocabulary)
+        query_vector = generate_query_embedding(corrected_query)
 
         results = []
 
@@ -76,7 +112,7 @@ def retrieve_documents(query, top_k=TOP_K):
             if similarity < MIN_SIMILARITY:
                 continue
 
-            boost = get_intent_boost(query, doc.intents)
+            boost = get_intent_boost(corrected_query, doc.intents)
 
             results.append({
                 "id": doc.document_id,
