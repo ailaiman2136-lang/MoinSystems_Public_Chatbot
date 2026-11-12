@@ -1,14 +1,20 @@
 from fastapi import FastAPI
 from app.db.database import check_database_connection
+from app.api.chat import router as chat_router
+from app.api.leads import router as leads_router
 
 app = FastAPI(
     title="MoinSystems Public Chatbot",
     version="1.0.0"
 )
 
+app.include_router(chat_router, prefix="/api/v1")
+app.include_router(leads_router, prefix="/api/v1")
+
 @app.get("/api/v1/health")
 def health_check():
     return {"status": "healthy"}
+
 
 @app.get("/api/v1/health/database")
 def database_health():
