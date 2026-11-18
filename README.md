@@ -6,22 +6,39 @@ An AI-powered website chatbot built for MoinSystems. It answers company-related 
 
 ## Demo
 
-### 1. Chatbot conversation
-![MoinSystems chatbot conversation](screenshots/chatbot-conversation.png)
+The screenshots are arranged in a compact two-column layout to keep the README easy to scan. Each image is displayed at a controlled width rather than taking up the full page.
 
-### 2. Lead capture form
-![Lead capture form](screenshots/lead-capture-form.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>1. Chatbot conversation</strong><br/>
+      <img src="screenshots/chatbot-conversation.png" alt="MoinSystems chatbot conversation" width="420"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>2. Lead capture form</strong><br/>
+      <img src="screenshots/lead-capture-form.png" alt="Lead capture form" width="420"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>3. API documentation</strong><br/>
+      <img src="screenshots/api-documentation.png" alt="FastAPI Swagger documentation" width="420"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>4. Dataset verification</strong><br/>
+      <img src="screenshots/dataset-verification.png" alt="Knowledge base dataset verification" width="420"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>5. Railway deployment</strong><br/>
+      <img src="screenshots/railway-deployment.png" alt="Railway deployment proof" width="420"/>
+    </td>
+    <td width="50%"></td>
+  </tr>
+</table>
 
-### 3. API documentation
-![FastAPI Swagger documentation](screenshots/api-documentation.png)
-
-### 4. Knowledge base and dataset verification
-![Knowledge base dataset verification](screenshots/dataset-verification.png)
-
-### 5. Railway deployment
-![Railway deployment proof](screenshots/railway-deployment.png)
-
-*The five images above are intended to be genuine project screenshots. Add the corresponding image files to the `screenshots/` folder using the exact filenames shown in the image links.*
+*Add the five genuine project screenshots to the `screenshots/` folder using the exact filenames shown above. Images are intentionally limited to 420 pixels wide for a cleaner layout.*
 
 ## Features
 
