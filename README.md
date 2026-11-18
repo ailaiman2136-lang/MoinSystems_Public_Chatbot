@@ -88,5 +88,11 @@ The application was tested for:
 
 ## Project Status
 
-Core development and local functional testing completed.
-Final documentation, dataset deliverable confirmation and deployment remain subject to completion and approval.
+The application has been deployed on Railway and the core functionality has been verified.
+
+- Live chatbot responses: Working
+- Knowledge base: 97 records loaded
+- Embeddings: 97/97 verified (768 dimensions)
+- Retrieval evaluation: 96.88% Hit@5
+- Lead capture and database storage: Working
+- Hosted email notifications: Pending due to outbound SMTP network restrictions on Railway. Local email delivery was tested successfully.
