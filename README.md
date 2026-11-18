@@ -38,8 +38,6 @@ The screenshots are arranged in a compact two-column layout to keep the README e
   </tr>
 </table>
 
-*Add the five genuine project screenshots to the `screenshots/` folder using the exact filenames shown above. Images are intentionally limited to 420 pixels wide for a cleaner layout.*
-
 ## Features
 
 - AI-powered responses using Google Gemini.
